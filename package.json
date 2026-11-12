@@ -1,0 +1,71 @@
+{
+  "name": "system-open",
+  "displayName": "System Open",
+  "description": "Opens PDFs, video, audio and Office files in the operating system's default program instead of a VS Code tab, however they were opened.",
+  "version": "1.0.0",
+  "publisher": "robert-local",
+  "private": true,
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bottobot/system-open"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "extensionKind": [
+    "ui"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "systemOpen.openActiveFile",
+        "title": "System Open: Open in System App"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "systemOpen.openActiveFile",
+          "when": "resourceScheme == file && !explorerResourceIsFolder"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "systemOpen.openActiveFile",
+          "when": "resourceScheme == file"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "System Open",
+      "properties": {
+        "systemOpen.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Send files of the listed types to the operating system's default program when they open as a tab."
+        },
+        "systemOpen.extensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "File extensions to open in the system app, without the dot (for example `pdf`, `mp4`). Empty means the built-in list: PDF, Office, common video and audio."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node test.js",
+    "package": "npx --yes @vscode/vsce@3.2.1 package --skip-license --out system-open.vsix",
+    "install-local": "npm run package && code --install-extension system-open.vsix --force"
+  }
+}
