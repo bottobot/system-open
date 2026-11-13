@@ -43,7 +43,10 @@ function matchingTabs(extensions) {
 }
 
 function openInSystemApp(fsPath) {
-	const { file, args, options } = core.openCommand(process.platform, fsPath, process.env);
+	return launch(core.openCommand(process.platform, fsPath, process.env));
+}
+
+function launch({ file, args, options }) {
 	return new Promise((resolve) => {
 		const child = spawn(file, args, { ...options, detached: true, stdio: "ignore" });
 		child.once("error", (err) => resolve(err));
@@ -71,18 +74,30 @@ async function onTabsChanged() {
 	}
 }
 
-function activate(context) {
-	log = vscode.window.createOutputChannel("System Open");
+/** The Explorer/tab item a menu command was invoked on, else the active editor's file. */
+function commandTarget(uri) {
+	return uri instanceof vscode.Uri ? uri : vscode.window.activeTextEditor?.document.uri
+		?? tabFileUri(vscode.window.tabGroups.activeTabGroup.activeTab ?? {});
+}
+
+function activate(context) {	log = vscode.window.createOutputChannel("System Open");
 	// Tabs already open when VS Code starts (restored sessions) are not reopened.
 	known = new Set(matchingTabs(settings().extensions).keys());
 	context.subscriptions.push(
 		log,
 		vscode.window.tabGroups.onDidChangeTabs(() => onTabsChanged().catch((e) => log.appendLine(String(e && e.stack || e)))),
 		vscode.commands.registerCommand("systemOpen.openActiveFile", async (uri) => {
-			const target = uri instanceof vscode.Uri ? uri : vscode.window.activeTextEditor?.document.uri
-				?? tabFileUri(vscode.window.tabGroups.activeTabGroup.activeTab ?? {});
+			const target = commandTarget(uri);
 			if (!target || target.scheme !== "file") return void vscode.window.showWarningMessage("System Open: no local file to open.");
 			const err = await openInSystemApp(target.fsPath);
+			if (err) vscode.window.showErrorMessage(`System Open: ${err.message}`);
+		}),
+		vscode.commands.registerCommand("systemOpen.openWithWindows", async (uri) => {
+			const target = commandTarget(uri);
+			if (!target || target.scheme !== "file") return void vscode.window.showWarningMessage("System Open: no local file to open.");
+			const cmd = core.openWithCommand(process.platform, target.fsPath, process.env);
+			if (!cmd) return void vscode.window.showWarningMessage("System Open: the Windows Open With chooser exists only on Windows.");
+			const err = await launch(cmd);
 			if (err) vscode.window.showErrorMessage(`System Open: ${err.message}`);
 		}),
 	);

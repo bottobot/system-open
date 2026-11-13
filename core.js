@@ -45,4 +45,20 @@ function openCommand(platform, fsPath, env) {
 	return { file: "xdg-open", args: [fsPath], options: { env } };
 }
 
-module.exports = { DEFAULT_EXTENSIONS, normalizeExtensions, wantsSystemApp, newlyOpened, openCommand };
+/**
+ * The process that shows Windows' own "How do you want to open this file?" chooser, the same
+ * one File Explorer's Open with > Choose another app shows. rundll32 hands everything after the
+ * entry point to OpenAs_RunDLL as one string, so the path goes unquoted and verbatim: spaces,
+ * commas and ampersands are not re-parsed (no shell is involved). Windows only.
+ */
+function openWithCommand(platform, fsPath, env) {
+	if (platform !== "win32") return undefined;
+	const root = env.SystemRoot || env.windir || "C:\\Windows";
+	return {
+		file: path.win32.join(root, "System32", "rundll32.exe"),
+		args: ["shell32.dll,OpenAs_RunDLL " + fsPath],
+		options: { env, windowsVerbatimArguments: true },
+	};
+}
+
+module.exports = { DEFAULT_EXTENSIONS, normalizeExtensions, wantsSystemApp, newlyOpened, openCommand, openWithCommand };

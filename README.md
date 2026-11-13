@@ -13,6 +13,10 @@ That works however the file was opened: a link in the Claude panel, the Explorer
 - Tabs restored when VS Code starts are left alone.
 - If the system app cannot be started, the tab stays open and the reason goes to the **System Open** output channel.
 
+## Open With (Windows)
+
+Right-click a file in the Explorer (or a tab) and pick **Open With (Windows)...** to get Windows' own "How do you want to open this file?" chooser, where you can pick any program. VS Code's built-in **Open With...** entry stays; extensions cannot remove it.
+
 ## Settings
 
 - `systemOpen.enabled` (default `true`).

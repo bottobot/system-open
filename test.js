@@ -51,6 +51,25 @@ test("linux and mac pass the path as one argument", () => {
 	assert.equal(core.openCommand("darwin", "/x.pdf", {}).file, "open");
 });
 
+test("open with: rundll32 OpenAs_RunDLL gets the raw path verbatim, windows only", () => {
+	const p = "C:\\Dev Stuff\\a,b & c (1).pdf";
+	const c = core.openWithCommand("win32", p, { SystemRoot: "C:\\Windows" });
+	assert.equal(c.file, "C:\\Windows\\System32\\rundll32.exe");
+	assert.deepEqual(c.args, ["shell32.dll,OpenAs_RunDLL " + p]);
+	assert.equal(c.options.windowsVerbatimArguments, true);
+	assert.equal(core.openWithCommand("linux", "/x.pdf", {}), undefined);
+	assert.equal(core.openWithCommand("darwin", "/x.pdf", {}), undefined);
+});
+
+test("open with is wired to the Explorer menu on Windows", () => {
+	const pkg = require("./package.json");
+	const cmd = "systemOpen.openWithWindows";
+	assert.ok(pkg.contributes.commands.some((c) => c.command === cmd));
+	const item = pkg.contributes.menus["explorer/context"].find((m) => m.command === cmd);
+	assert.ok(item && /isWindows/.test(item.when) && /!explorerResourceIsFolder/.test(item.when));
+	assert.ok(fs.readFileSync(path.join(__dirname, "extension.js"), "utf8").includes(`registerCommand("${cmd}"`));
+});
+
 // The env-var route must survive awkward paths. Swap `start` for `echo` and read back what cmd expanded.
 if (process.platform === "win32") {
 	test("cmd expands the env var to the exact path, specials intact", () => {

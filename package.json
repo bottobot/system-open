@@ -28,16 +28,36 @@
       {
         "command": "systemOpen.openActiveFile",
         "title": "System Open: Open in System App"
+      },
+      {
+        "command": "systemOpen.openWithWindows",
+        "title": "Open With (Windows)...",
+        "enablement": "isWindows"
       }
     ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "systemOpen.openWithWindows",
+          "when": "isWindows"
+        }
+      ],
       "explorer/context": [
+        {
+          "command": "systemOpen.openWithWindows",
+          "group": "navigation@21",
+          "when": "isWindows && resourceScheme == file && !explorerResourceIsFolder"
+        },
         {
           "command": "systemOpen.openActiveFile",
           "when": "resourceScheme == file && !explorerResourceIsFolder"
         }
       ],
       "editor/title/context": [
+        {
+          "command": "systemOpen.openWithWindows",
+          "when": "isWindows && resourceScheme == file"
+        },
         {
           "command": "systemOpen.openActiveFile",
           "when": "resourceScheme == file"
